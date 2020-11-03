@@ -1,6 +1,6 @@
-// globals that completely break the game if i take them out of global scope
+// globals that completely break the game if i take them out of global scope REST IN PEPPORONI RIP
 
-ArrayList<PImage> roomTiles;
+  ArrayList<PImage> roomTiles;
 ArrayList<PImage> outerWallTiles;
 MainCharacter mainCharacter;
 
@@ -15,11 +15,26 @@ GameObjectFactory gameObjectFactory;
 
 MovingObjectController movingObjectController;
 
+
+
 class RunningGameState extends GameState
 {
+  MovingObjectThread movingObjectThread;
+  
+  //delay between all monster movements
+  //measured in seconds
+  final double MONSTER_DELAY = 1.5;
+  
+  int timeToWait;
+  int delay;
+  
   RunningGameState()
   {
     initGameState();
+    timeToWait = (int)(MONSTER_DELAY*FRAMERATE);
+    delay = 0;
+    //movingObjectThread = new MovingObjectThread();
+    //movingObjectThread.start();
   }
   
   void initGameState()
@@ -51,6 +66,7 @@ class RunningGameState extends GameState
                                
    roomToDraw = loadedLevel.getStartingRoom();
    movingObjectController.setCurrentRoom(roomToDraw);
+   //thread("movingGameObjectsThread");
   
   }
   
@@ -95,8 +111,17 @@ ArrayList<PImage> loadSpriteSheet(String spriteSheetName){
   void drawGameState()
   {
     
+    
+    if(delay == timeToWait)
+    {
+      movingObjectController.moveMovingGameObjects();
+      delay = 0;
+    }
+    else
+      delay++;
+    
+    
     roomToDraw.drawRoom();
-  
     drawText();
   }
   
@@ -170,6 +195,7 @@ ArrayList<PImage> loadSpriteSheet(String spriteSheetName){
   fill(0,0,0);
   }
   
+  /*
 void initGameTurn(Direction direction)
 {
   
@@ -190,6 +216,36 @@ void initGameTurn(Direction direction)
   }
  
 }
+*/
+
+void initGameTurn(Direction direction)
+{
+  
+  
+  if(!mainCharacter.isDead())
+  {
+    println("character moving " + direction);
+    movingObjectController.moveMainCharacter(direction);
+  //movingObjectController.moveMainCharacter(direction,roomToDraw);
+  
+    //movingObjectController.moveMovingGameObjects();
+ // movingObjectController.moveMovingGameObjects(roomToDraw);
+  }
+  else
+  {
+    changeStateLoseGame();
+    println("YOU ARE DEAD");
+  }
+ 
+}
+
+
+
+void moveMovingGameObjects()
+{
+  movingObjectController.moveMovingGameObjects();
+}
+
 
 
 
@@ -198,7 +254,7 @@ void initGameTurn()
    if(!mainCharacter.isDead())
     {
       println("skipping a turn!");
-      movingObjectController.moveMovingGameObjects();
+      //movingObjectController.moveMovingGameObjects();
     }
     else
     {
@@ -212,6 +268,7 @@ void initGameTurn()
 
 void changeRoom(Room room, Direction direction)
 {
+  
     roomToDraw = room;
     //loadedLevel.setCurrentRoom(room);
     loadedLevel.setCurrentRoom(roomToDraw);
@@ -221,11 +278,13 @@ void changeRoom(Room room, Direction direction)
     roomToDraw.printRoomInfo();
     //roomToDraw = loadedLevel.getStartingRoom();
    //movingObjectController.setCurrentRoom(roomToDraw);
+   
     
 }
 
 void changeLevel()
 {
+  
   Level newLevel = gameLevelFactory.buildLevel();  
   
   //loadedLevel = gameLevelFactory.buildLevel();  
@@ -241,5 +300,23 @@ void changeLevel()
      changeStateWinGame();
      println("GGWP NOOB EZ GAME FGT");
    }
+   
+   
  }
+ 
+public class MovingObjectThread extends Thread
+{
+  
+  void run()
+  {
+     while(true)
+     {
+        moveMovingGameObjects();
+        delay(timeToWait);
+     }
+  }
+  
+  
+}
+ 
 }
